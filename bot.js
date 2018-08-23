@@ -2,6 +2,8 @@ const Discord = require('discord.io');
 const winston = require('winston');
 const config = require('./config.json');
 
+const prefix = '.';
+
 // Configure logger settings
 const logger = winston.createLogger({
     level: config.logLevel.console,
@@ -31,7 +33,7 @@ bot.on('ready', function (evt) {
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Our bot needs to know if it will execute a command
     // It will listen for messages that will start with `!`
-    if (message.substring(0, 1) === '!') {
+    if (message.substring(0, 1) === prefix) {
         let args = message.substring(1).split(' ');
         const cmd = args[0];
 
@@ -46,6 +48,15 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'ping':
                 ping(user, userID, channelID, message, evt);
                 break;
+            case 'lsar':
+                notYetImplemented(user, userID, channelID, message, evt);
+                break;
+            case 'iam':
+                notYetImplemented(user, userID, channelID, message, evt);
+                break;
+            case 'iamnot':
+                notYetImplemented(user, userID, channelID, message, evt);
+                break;
             default:
                 unknownCommand(user, userID, channelID, message, evt);
         }
@@ -56,15 +67,18 @@ function help(user, userID, channelID, message, evt) {
     bot.sendMessage({
         to: channelID,
         message: ':information_source: **List of Commands**\n```\n' +
-            '!help     Displays this message.\n' +
-            '!snuggle  Gets Phantasia to snuggle you\n' +
-            '!ping     Pong!' +
+            prefix + 'help     Displays this message.\n' +
+            prefix + 'snuggle  Gets Phantasia to snuggle you\n' +
+            prefix + 'ping     Pings the bot to see if it\'s alive\n' +
+            prefix + 'lsar     Not Yet Implemented!\n' +
+            prefix + 'iam      Not Yet Implemented!\n' +
+            prefix + 'iamnot   Not Yet Implemented!\n' +
             '```'
     });
 }
 
 function snuggle(user, userID, channelID, message, evt) {
-    let responseUsername = "<@" + userID + ">";
+    let responseUsername = '<@' + userID + '>';
     bot.sendMessage({
         to: channelID,
         message: '*Snuggles with ' + responseUsername + '*'
@@ -80,6 +94,14 @@ function ping(user, userID, channelID, message, evt) {
     bot.sendMessage({
         to: channelID,
         message: 'Pong!'
+    });
+}
+
+function notYetImplemented(user, userID, channelID, message, evt) {
+    bot.sendMessage({
+        to: channelID,
+        message: ':information_source: This feature is not quite ready yet!\n' +
+            'Contact a staff member if you need help.'
     });
 }
 

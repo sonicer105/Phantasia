@@ -1,6 +1,6 @@
 {
-  "name": "genericdiscordbot",
-  "version": "1.0.0",
+  "name": "phantasia",
+  "version": "0.1.0",
   "description": "",
   "main": "bot.js",
   "scripts": {
