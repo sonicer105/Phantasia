@@ -493,3 +493,4 @@ ASALocalRun/
 # End of https://www.gitignore.io/api/node,visualstudio,phpstorm+all,visualstudiocode
 
 config.json
+*.db

@@ -1,10 +1,12 @@
 const Discord = require('discord.io');
 const winston = require('winston');
-const config = require('./config.json');
+const config = require('./config');
+
+const db = require('./services/sqliteService');
 
 const prefix = '.';
 
-// Configure logger settings
+//#region Configure logger settings
 const logger = winston.createLogger({
     level: config.logLevel.console,
     format: winston.format.json(),
@@ -17,19 +19,26 @@ if (process.env.NODE_ENV !== 'production') {
         format: winston.format.simple()
     }));
 }
+//#endregion logger
 
-// Initialize Discord Bot
+//#region Initialize database
+db.init(logger);
+//#endregion
+
+//#region Initialize Discord bot
+logger.info('Bot starting at ' + new Date().toISOString());
 // noinspection SpellCheckingInspection
 const bot = new Discord.Client({
     token: config.auth.token,
     autorun: true
 });
-bot.on('ready', function (evt) {
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(bot.username + ' - (' + bot.id + ')');
+bot.on('ready', function () {
+    logger.info('Connected to Discord! Logged in as: ' + bot.username + ' - (' + bot.id + ')');
     logger.debug(bot);
 });
+//#endregion
+
+//#region Main switch-case for user messages
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Our bot needs to know if it will execute a command
     // It will listen for messages that will start with `!`
@@ -62,7 +71,9 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         }
     }
 });
+//#endregion
 
+//#region Command help
 function help(user, userID, channelID, message, evt) {
     bot.sendMessage({
         to: channelID,
@@ -76,7 +87,9 @@ function help(user, userID, channelID, message, evt) {
             '```'
     });
 }
+//endregion
 
+//#region Command snuggle
 function snuggle(user, userID, channelID, message, evt) {
     let responseUsername = '<@' + userID + '>';
     bot.sendMessage({
@@ -84,7 +97,9 @@ function snuggle(user, userID, channelID, message, evt) {
         message: '*Snuggles with ' + responseUsername + '*'
     });
 }
+//endregion
 
+//#region Command ping
 function ping(user, userID, channelID, message, evt) {
     logger.debug(user);
     logger.debug(userID);
@@ -96,7 +111,9 @@ function ping(user, userID, channelID, message, evt) {
         message: 'Pong!'
     });
 }
+//endregion
 
+//#region Command NYI
 function notYetImplemented(user, userID, channelID, message, evt) {
     bot.sendMessage({
         to: channelID,
@@ -104,7 +121,9 @@ function notYetImplemented(user, userID, channelID, message, evt) {
             'Contact a staff member if you need help.'
     });
 }
+//endregion
 
+//#region Command unknown
 function unknownCommand(user, userID, channelID, message, evt) {
     bot.sendMessage({
         to: channelID,
@@ -112,3 +131,43 @@ function unknownCommand(user, userID, channelID, message, evt) {
             'Type `!help` for a list of commands.'
     });
 }
+//endregion
+
+//#region Handle exits gracefully and do cleanup
+function exitHandler(options, exitCode) {
+    logger.info("Caught exit event '" + options.type + "'");
+    if(db.getState() === db.states.OPEN) {
+        db.close(function (err) {
+            if (err) {
+                logger.error(err);
+            } else {
+                logger.info("SQLite DB closed gracefully!");
+                exitHandlerFinish(options, exitCode);
+            }
+        });
+    } else {
+        exitHandlerFinish(options, exitCode);
+    }
+}
+function exitHandlerFinish(options, exitCode) {
+    if (exitCode || exitCode === 0) {
+        logger.info("Exited with code " + exitCode);
+    }
+    if (options.exit) {
+        process.exit(exitCode);
+    }
+}
+
+//do something when app is closing
+process.on('exit', exitHandler.bind(null, {type:"exit"}));
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, {type:"SIGINT",exit:true}));
+
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler.bind(null, {type:"SIGUSR1",exit:true}));
+process.on('SIGUSR2', exitHandler.bind(null, {type:"SIGUSR2",exit:true}));
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, {type:"Exception",exit:true}));
+//#endregion
