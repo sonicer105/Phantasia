@@ -1,0 +1,9 @@
+{
+  "logLevel": {
+    "console": "debug",
+    "file": "debug"
+  },
+  "auth": {
+    "token": "<your secret token here>"
+  }
+}
