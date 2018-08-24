@@ -3,6 +3,7 @@ const winston = require('winston');
 const config = require('./config');
 
 const db = require('./services/sqliteService');
+const security = require('./services/securityService');
 
 const prefix = '.';
 
@@ -21,8 +22,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 //#endregion logger
 
-//#region Initialize database
+//#region Initialize services
 db.init(logger);
+security.init(logger);
 //#endregion
 
 //#region Initialize Discord bot
@@ -34,49 +36,46 @@ const bot = new Discord.Client({
 });
 bot.on('ready', function () {
     logger.info('Connected to Discord! Logged in as: ' + bot.username + ' - (' + bot.id + ')');
-    logger.debug(bot);
+    // logger.debug(bot);
 });
 //#endregion
 
 //#region Main switch-case for user messages
-bot.on('message', function (user, userID, channelID, message, evt) {
+bot.on('message', function (userName, userId, channelId, message, evt) {
     // Our bot needs to know if it will execute a command
     // It will listen for messages that will start with `!`
     if (message.substring(0, 1) === prefix) {
         let args = message.substring(1).split(' ');
-        const cmd = args[0];
-
-        args = args.splice(1);
-        switch(cmd) {
+        switch(args[0]) {
             case 'help':
-                help(user, userID, channelID, message, evt);
+                help(channelId);
                 break;
             case 'snuggle':
-                snuggle(user, userID, channelID, message, evt);
+                snuggle(userId, channelId);
                 break;
             case 'ping':
-                ping(user, userID, channelID, message, evt);
+                ping(userName, userId, channelId, evt);
                 break;
             case 'lsar':
-                notYetImplemented(user, userID, channelID, message, evt);
+                notYetImplemented(channelId);
                 break;
             case 'iam':
-                notYetImplemented(user, userID, channelID, message, evt);
+                notYetImplemented(channelId);
                 break;
             case 'iamnot':
-                notYetImplemented(user, userID, channelID, message, evt);
+                notYetImplemented(channelId);
                 break;
             default:
-                unknownCommand(user, userID, channelID, message, evt);
+                unknownCommand(channelId, message);
         }
     }
 });
 //#endregion
 
 //#region Command help
-function help(user, userID, channelID, message, evt) {
+function help(channelId) {
     bot.sendMessage({
-        to: channelID,
+        to: channelId,
         message: ':information_source: **List of Commands**\n```\n' +
             prefix + 'help     Displays this message.\n' +
             prefix + 'snuggle  Gets Phantasia to snuggle you\n' +
@@ -90,33 +89,29 @@ function help(user, userID, channelID, message, evt) {
 //endregion
 
 //#region Command snuggle
-function snuggle(user, userID, channelID, message, evt) {
-    let responseUsername = '<@' + userID + '>';
+function snuggle(userId, channelId) {
+    let responseUsername = '<@' + userId + '>';
     bot.sendMessage({
-        to: channelID,
+        to: channelId,
         message: '*Snuggles with ' + responseUsername + '*'
     });
 }
 //endregion
 
 //#region Command ping
-function ping(user, userID, channelID, message, evt) {
-    logger.debug(user);
-    logger.debug(userID);
-    logger.debug(channelID);
-    logger.debug(message);
-    logger.debug(evt);
+function ping(userName, userId, channelId, evt) {
+    logger.info(userName + " is admin: " + security.isAdmin(userId, bot.servers[evt.d.guild_id]));
     bot.sendMessage({
-        to: channelID,
+        to: channelId,
         message: 'Pong!'
     });
 }
 //endregion
 
 //#region Command NYI
-function notYetImplemented(user, userID, channelID, message, evt) {
+function notYetImplemented(channelId) {
     bot.sendMessage({
-        to: channelID,
+        to: channelId,
         message: ':information_source: This feature is not quite ready yet!\n' +
             'Contact a staff member if you need help.'
     });
@@ -124,9 +119,9 @@ function notYetImplemented(user, userID, channelID, message, evt) {
 //endregion
 
 //#region Command unknown
-function unknownCommand(user, userID, channelID, message, evt) {
+function unknownCommand(channelId, message) {
     bot.sendMessage({
-        to: channelID,
+        to: channelId,
         message: ':warning: Unknown Command: `' + message + '`\n' +
             'Type `!help` for a list of commands.'
     });
@@ -169,5 +164,5 @@ process.on('SIGUSR1', exitHandler.bind(null, {type:"SIGUSR1",exit:true}));
 process.on('SIGUSR2', exitHandler.bind(null, {type:"SIGUSR2",exit:true}));
 
 //catches uncaught exceptions
-process.on('uncaughtException', exitHandler.bind(null, {type:"Exception",exit:true}));
+// process.on('uncaughtException', exitHandler.bind(null, {type:"Exception",exit:true}));
 //#endregion
