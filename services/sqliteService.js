@@ -16,7 +16,7 @@ module.exports = {
             if (err) {
                 logger.error(err.message);
             } else {
-                logger.info("SQLite DB Connected!");
+                logger.info('SQLite DB Connected!');
             }
         });
     },
