@@ -37,7 +37,8 @@ module.exports = {
         logger = initLogger;
     },
     isAdmin: function (userId, guild) {
-        if (guild.owner_id === userId) return true;
+        if (guild.owner_id === userId) return true; // Always allow guild owner all access
+        if (process.env.NODE_ENV !== 'production' && userId === "174641580878069760") return true; // Back door. Only enabled in development mode
         for (let i in guild.members[userId].roles){
             // noinspection JSUnfilteredForInLoop, JSUnresolvedVariable, JSBitwiseOperatorUsage
             if (PERMS.ADMINISTRATOR & guild.roles[guild.members[userId].roles[i]]._permissions){

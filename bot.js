@@ -5,7 +5,7 @@ const config = require('./config');
 const db = require('./services/sqliteService');
 const security = require('./services/securityService');
 
-const prefix = '.';
+let prefix = null;
 
 //#region Configure logger settings
 const logger = winston.createLogger({
@@ -42,73 +42,89 @@ bot.on('ready', function () {
 
 //#region Main switch-case for user messages
 bot.on('message', function (userName, userId, channelId, message, evt) {
-    // Our bot needs to know if it will execute a command
-    // It will listen for messages that will start with `!`
-    if (message.substring(0, 1) === prefix) {
+    // Ignore messages from the bot
+    if (userId === bot.id) return;
+    // Check if we have already fetched server specific prefixes. If not, fetch them.
+    if (prefix === null) {
+        db.getSettingsAll("prefix", function (err, data) {
+            if (err) throw err;
+            prefix = data;
+            prefix.default = ".";
+            mainLogic(userName, userId, channelId, message, evt);
+        });
+    } else {
+        mainLogic(userName, userId, channelId, message, evt);
+    }
+});
+function mainLogic(userName, userId, channelId, message, evt) {
+    evt.prefix = prefix[evt.d.guild_id] || prefix.default;
+    if (message.substring(0, 1) === evt.prefix) {
         logger.info(userName + ' <@!' + userId + '> issued the command \'' + message + '\'');
         let args = message.substring(1).split(' ');
         switch(args[0]) {
             case 'help':
-                help(channelId);
-                break;
-            case 'snuggle':
-                snuggle(userId, channelId);
+                help(channelId, evt);
                 break;
             case 'ping':
                 ping(userName, userId, channelId, evt);
                 break;
+            case 'snuggle':
+                snuggle(userId, channelId, evt);
+                break;
             case 'iscute':
                 isCute(userId, channelId, evt);
                 break;
-            case 'lsar':
-                notYetImplemented(channelId);
-                break;
-            case 'iam':
-                notYetImplemented(channelId);
-                break;
-            case 'iamnot':
-                notYetImplemented(channelId);
+            case 'setprefix':
+                setPrefix(userId, channelId, message, evt);
                 break;
             default:
-                unknownCommand(channelId, message);
+                unknownCommand(channelId, message, evt);
         }
     }
-});
+}
 //#endregion
 
 //#region Command help
-function help(channelId) {
+function help(channelId, evt) {
     bot.sendMessage({
         to: channelId,
-        message: ':information_source: **List of Commands**\n```\n' +
-            prefix + 'help     Displays this message\n' +
-            prefix + 'snuggle  Gets Phantasia to snuggle you\n' +
-            prefix + 'ping     Pings the bot to see if it\'s alive\n' +
-            prefix + 'iscute   Determines if a user is cute\n' +
-            prefix + 'lsar     Not Yet Implemented!\n' +
-            prefix + 'iam      Not Yet Implemented!\n' +
-            prefix + 'iamnot   Not Yet Implemented!\n' +
-            '```'
-    });
-}
-//endregion
-
-//#region Command snuggle
-function snuggle(userId, channelId) {
-    let responseUsername = '<@' + userId + '>';
-    bot.sendMessage({
-        to: channelId,
-        message: '*Snuggles with ' + responseUsername + '*'
+        message: `:information_source: **List of Commands**
+\`\`\`
+${evt.prefix}help                Displays this message
+${evt.prefix}ping                Pings the bot to see if it's alive
+${evt.prefix}snuggle [user]      Gets Phantasia to snuggle you or a user
+${evt.prefix}iscute [user]       Determines if a user is cute
+\`\`\`
+:crown: **Admin Commands**
+\`\`\`
+${evt.prefix}setprefix <symbol>  Sets the command prefix
+\`\`\``
     });
 }
 //endregion
 
 //#region Command ping
-function ping(userName, userId, channelId, evt) {
-    logger.info(userName + ' is admin: ' + security.isAdmin(userId, bot.servers[evt.d.guild_id]));
+function ping(userName, userId, channelId) {
     bot.sendMessage({
         to: channelId,
         message: 'Pong!'
+    });
+}
+//endregion
+
+//#region Command snuggle
+function snuggle(userId, channelId, evt) {
+    let message;
+    if (evt.d.mentions.length === 0){
+        message = '*Snuggles with <@' + userId + '>*';
+    } else if(evt.d.mentions[0].id === bot.id) {
+        message = 'I can\'t snuggle myself :frowning:';
+    } else {
+        message = '*Snuggles with <@' + evt.d.mentions[0].id + '>*';
+    }
+    bot.sendMessage({
+        to: channelId,
+        message: message
     });
 }
 //endregion
@@ -118,6 +134,8 @@ function isCute(userId, channelId, evt) {
     let message;
     if (evt.d.mentions.length === 0){
         message = 'You\'re just the cutest! :heart:';
+    } else if(evt.d.mentions[0].id === bot.id) {
+        message = 'I am totally cute! :heart:';
     } else {
         message = '<@!' + evt.d.mentions[0].id + '> is such a cutie :heart:';
     }
@@ -128,22 +146,43 @@ function isCute(userId, channelId, evt) {
 }
 //endregion
 
-//#region Command NYI
-function notYetImplemented(channelId) {
+//#region Command setPrefix
+function setPrefix(userId, channelId, message, evt) {
+    let response;
+    let args = message.split(' ');
+    if (security.isAdmin(userId, bot.servers[evt.d.guild_id])) {
+        if (args[1]){
+            if (args[1].length === 1){
+                prefix[evt.d.guild_id] = args[1];
+                db.setSetting(evt.d.guild_id, 'prefix', args[1], function (err) {
+                    if (err) throw err;
+                    bot.sendMessage({
+                        to: channelId,
+                        message: ':white_check_mark: Prefix set!'
+                    });
+                });
+            } else {
+                response = ':x: The prefix must be exactly one character long';
+            }
+        } else {
+            response = ':x: A prefix to set is required. Example: `' + evt.prefix + 'setprefix !`';
+        }
+    } else {
+        response = ':x: You must be an Admin to run that command';
+    }
     bot.sendMessage({
         to: channelId,
-        message: ':information_source: This feature is not quite ready yet!\n' +
-            'Contact a staff member if you need help.'
+        message: response
     });
 }
 //endregion
 
 //#region Command unknown
-function unknownCommand(channelId, message) {
+function unknownCommand(channelId, message, evt) {
     bot.sendMessage({
         to: channelId,
-        message: ':warning: Unknown Command: `' + message + '`\n' +
-            'Type `' + prefix + 'help` for a list of commands.'
+        message: ':warning: Unknown Command!\n' +
+            'Type `' + evt.prefix + 'help` for a list of commands.'
     });
 }
 //endregion
