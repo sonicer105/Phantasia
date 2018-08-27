@@ -1,11 +1,21 @@
 const Discord = require('discord.io');
 const winston = require('winston');
+const readLine = require('readline');
 const config = require('./config');
 
 const db = require('./services/sqliteService');
 const security = require('./services/securityService');
 
 let prefix = null;
+
+//#region Prototypes
+Array.prototype.joinRange = function(seperator,start,end){
+    if(!start) start = 0;
+    if(!end) end = this.length - 1;
+    end++;
+    return this.slice(start,end).join(seperator);
+};
+//#endregion
 
 //#region Configure logger settings
 const logger = winston.createLogger({
@@ -41,22 +51,23 @@ bot.on('ready', function () {
 //#endregion
 
 //#region Main switch-case for user messages
-bot.on('message', function (userName, userId, channelId, message, evt) {
+bot.on('message', mainLogic1);
+function mainLogic1(userName, userId, channelId, message, evt) {
     // Ignore messages from the bot
-    if (userId === bot.id) return;
+    // if (userId === bot.id) return;
     // Check if we have already fetched server specific prefixes. If not, fetch them.
     if (prefix === null) {
         db.getSettingsAll("prefix", function (err, data) {
             if (err) throw err;
             prefix = data;
             prefix.default = ".";
-            mainLogic(userName, userId, channelId, message, evt);
+            mainLogic2(userName, userId, channelId, message, evt);
         });
     } else {
-        mainLogic(userName, userId, channelId, message, evt);
+        mainLogic2(userName, userId, channelId, message, evt);
     }
-});
-function mainLogic(userName, userId, channelId, message, evt) {
+}
+function mainLogic2(userName, userId, channelId, message, evt) {
     evt.prefix = prefix[evt.d.guild_id] || prefix.default;
     if (message.substring(0, 1) === evt.prefix) {
         logger.info(userName + ' <@!' + userId + '> issued the command \'' + message + '\'');
@@ -186,6 +197,52 @@ function unknownCommand(channelId, message, evt) {
     });
 }
 //endregion
+
+//#region stdin handling for commandline input
+if (require('tty').isatty(1) || typeof v8debug === 'object' || /--debug|--inspect/.test(process.execArgv.join(' '))) {
+    let rl = readLine.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false
+    });
+    rl.on('line', function(line){
+        logger.debug('user issued the command "' + line + '" via the command line');
+        if(line){
+            let cmd = line.split(' ')[0].toLowerCase();
+            switch (cmd){
+                case 'help':
+                    logger.info('Commands: help, say');
+                    break;
+                case 'say':
+                    say(line);
+                    break;
+                default:
+                    logger.info('Unknown Command. Use "help" for a list of commands');
+            }
+        }
+    });
+}
+//#endregion
+
+//#region Command botSay from tty
+function say(line) {
+    let cmd = line.split(' ');
+    if (cmd.length >= 3){
+        if (bot.channels[cmd[1]]){
+            let message = cmd.joinRange(' ', 2, cmd.length - 1);
+            bot.sendMessage({
+                to: cmd[1],
+                message: message
+            });
+            logger.info('Message sent to ' + cmd[1])
+        } else {
+            logger.error('Channel ID not found. Syntax: say <Channel ID> <Message>');
+        }
+    } else {
+        logger.error('Too few operators. Syntax: say <Channel ID> <Message>');
+    }
+}
+//#endregion
 
 //#region Handle exits gracefully and do cleanup
 function exitHandler(options, exitCode) {
