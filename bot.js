@@ -1,7 +1,9 @@
-const Discord = require('discord.io');
+const Discord = require('discord.io'); // Docs: https://izy521.github.io/discord.io-docs/Discord.Client.html
 const winston = require('winston');
 const readLine = require('readline');
 const config = require('./config');
+
+// Embed visualizer: https://leovoel.github.io/embed-visualizer/
 
 const db = require('./services/sqliteService');
 const security = require('./services/securityService');
@@ -46,6 +48,11 @@ const bot = new Discord.Client({
 });
 bot.on('ready', function () {
     logger.info('Connected to Discord! Logged in as: ' + bot.username + ' - (' + bot.id + ')');
+    bot.setPresence({
+        game: {
+            name: "with hypnosis"
+        }
+    });
     // logger.debug(bot);
 });
 //#endregion
@@ -88,6 +95,15 @@ function mainLogic2(userName, userId, channelId, message, evt) {
             case 'setprefix':
                 setPrefix(userId, channelId, message, evt);
                 break;
+            case 'lsar':
+                listSelfAssignableRolls(channelId, evt);
+                break;
+            case 'asar':
+                addSelfAssignableRolls(userId, channelId, message, evt);
+                break;
+            case 'rsar':
+                removeSelfAssignableRolls(userId, channelId, message, evt);
+                break;
             default:
                 unknownCommand(channelId, message, evt);
         }
@@ -99,17 +115,45 @@ function mainLogic2(userName, userId, channelId, message, evt) {
 function help(channelId, evt) {
     bot.sendMessage({
         to: channelId,
-        message: `:information_source: **List of Commands**
-\`\`\`
-${evt.prefix}help                Displays this message
-${evt.prefix}ping                Pings the bot to see if it's alive
-${evt.prefix}snuggle [user]      Gets Phantasia to snuggle you or a user
-${evt.prefix}iscute [user]       Determines if a user is cute
-\`\`\`
-:crown: **Admin Commands**
-\`\`\`
-${evt.prefix}setprefix <symbol>  Sets the command prefix
-\`\`\``
+        embed: {
+            title: ":information_source: **List of Commands**",
+            // description: "These are the roles you may give to yourself with the `.iam` command.",
+            color: 1,
+            fields: [
+                {
+                    name: evt.prefix + 'help',
+                    value: 'Displays this message'
+                },
+                {
+                    name: evt.prefix + 'ping',
+                    value: 'Pings the bot to see if it\'s alive'
+                },
+                {
+                    name: evt.prefix + 'snuggle [user]',
+                    value: 'Gets Phantasia to snuggle you or a user'
+                },
+                {
+                    name: evt.prefix + 'iscute [user]',
+                    value: 'Determines if a user is cute'
+                },
+                {
+                    name: evt.prefix + 'setprefix <symbol>',
+                    value: 'Sets the command prefix **(Admin Only)**'
+                },
+                {
+                    name: evt.prefix + 'lsar',
+                    value: 'Lists roles you can assign yourself'
+                },
+                {
+                    name: evt.prefix + 'asar',
+                    value: 'Adds a self assignable role **(Admin Only)**'
+                },
+                {
+                    name: evt.prefix + 'rsar',
+                    value: 'removes a self assignable role **(Admin Only)**'
+                }
+            ]
+        }
     });
 }
 //endregion
@@ -188,6 +232,113 @@ function setPrefix(userId, channelId, message, evt) {
 }
 //endregion
 
+//#region Command List Self-Assignable Role
+function listSelfAssignableRolls(channelId, evt) {
+    db.getSARAll(evt.d.guild_id, function (err, data) {
+        if (err) throw err;
+        let fields = [];
+        if (data.length > 0){
+            for (let i in data){
+                // noinspection JSUnfilteredForInLoop
+                if (data[i].id){
+                    // noinspection JSUnfilteredForInLoop
+                    fields[i] = {
+                        name: bot.servers[evt.d.guild_id].roles[data[i].id].name,
+                        value: data[i].settings.description || "No Description Provided",
+                    };
+                }
+            }
+        } if (fields.length === 0) {
+            fields = [{
+                name: 'None',
+                value: 'No self assignable roles set. Check back later.'
+            }];
+        }
+        bot.sendMessage({
+            to: channelId,
+            embed: {
+                title: "Self-assignable Roles",
+                description: "These are the roles you may give to yourself with the `.iam` command.",
+                color: 1,
+                fields: fields
+            }
+        });
+    });
+}
+//endregion
+
+//#region Command Add Self-Assignable Role
+function addSelfAssignableRolls(userId, channelId, message, evt) {
+    let response;
+    let args = parseCommand(message);
+    if (security.isAdmin(userId, bot.servers[evt.d.guild_id])) {
+        if (args[1]){
+            let id = roleIdFromName(args[1], evt.d.guild_id);
+            if (id) {
+                let settings;
+                if (args.length > 2) {
+                    settings = {
+                        description: args.joinRange(" ", 2, args.length - 1)
+                    }
+                } else {
+                    settings = {
+                        description: null
+                    }
+                }
+                db.setSAR(evt.d.guild_id, id, JSON.stringify(settings), function (err) {
+                    if (err) throw err;
+                    bot.sendMessage({
+                        to: channelId,
+                        message: ':white_check_mark: Role added!'
+                    });
+                });
+            } else {
+                response = ':x: Role is not valid';
+            }
+        } else {
+            response = ':x: A role is required';
+        }
+    } else {
+        response = ':x: You must be an Admin to run that command';
+    }
+    bot.sendMessage({
+        to: channelId,
+        message: response
+    });
+}
+//endregion
+
+//#region Command Remove Self-Assignable Role
+function removeSelfAssignableRolls(userId, channelId, message, evt) {
+    let response;
+    let args = parseCommand(message);
+    if (security.isAdmin(userId, bot.servers[evt.d.guild_id])) {
+        if (args[1]){
+            let id = roleIdFromName(args[1], evt.d.guild_id);
+            if (id) {
+                db.removeSAR(evt.d.guild_id, id, function (err) {
+                    if (err) throw err;
+                    bot.sendMessage({
+                        to: channelId,
+                        message: ':white_check_mark: Role removed!'
+                    });
+                });
+            } else {
+                response = ':x: Role is not valid';
+            }
+        } else {
+            response = ':x: A role is required';
+        }
+    } else {
+        response = ':x: You must be an Admin to run that command';
+    }
+    bot.sendMessage({
+        to: channelId,
+        message: response
+    });
+}
+//endregion
+
 //#region Command unknown
 function unknownCommand(channelId, message, evt) {
     bot.sendMessage({
@@ -197,6 +348,24 @@ function unknownCommand(channelId, message, evt) {
     });
 }
 //endregion
+
+//#region Helpers
+function roleIdFromName(roleName, serverId) {
+    for (let i in bot.servers[serverId].roles){
+        if (bot.servers[serverId].roles[i].name.toLowerCase() === roleName.toLowerCase()){
+            return bot.servers[serverId].roles[i].id;
+        }
+    }
+    return null;
+}
+
+function parseCommand(str) {
+    let re = /(?:")([^"]+)(?:")|([^\s"]+)(?=\s+|$)/g;
+    let res=[], arr;
+    while (arr = re.exec(str)) { res.push(arr[1] ? arr[1] : arr[0]);}
+    return res;
+}
+//#endregion
 
 //#region stdin handling for commandline input
 if (require('tty').isatty(1) || typeof v8debug === 'object' || /--debug|--inspect/.test(process.execArgv.join(' '))) {
