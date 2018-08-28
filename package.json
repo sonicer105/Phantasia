@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "discord.io": "github:izy521/discord.io",
-    "q": "^1.5.1",
     "sqlite3": "^4.0.2",
     "winston": "^3.0.0"
   }
