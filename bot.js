@@ -50,7 +50,7 @@ bot.on('ready', function () {
     logger.info('Connected to Discord! Logged in as: ' + bot.username + ' - (' + bot.id + ')');
     bot.setPresence({
         game: {
-            name: "with hypnosis"
+            name: 'with hypnosis'
         }
     });
     // logger.debug(bot);
@@ -64,10 +64,10 @@ function mainLogic1(userName, userId, channelId, message, evt) {
     // if (userId === bot.id) return;
     // Check if we have already fetched server specific prefixes. If not, fetch them.
     if (prefix === null) {
-        db.getSettingsAll("prefix", function (err, data) {
+        db.getSettingsAll('prefix', function (err, data) {
             if (err) throw err;
             prefix = data;
-            prefix.default = ".";
+            prefix.default = '.';
             mainLogic2(userName, userId, channelId, message, evt);
         });
     } else {
@@ -81,18 +81,24 @@ function mainLogic2(userName, userId, channelId, message, evt) {
         let args = message.substring(1).split(' ');
         switch(args[0]) {
             case 'help':
-                help(channelId, evt);
+                help(channelId, message, evt);
                 break;
             case 'ping':
                 ping(userName, userId, channelId, evt);
                 break;
             case 'snuggle':
-                snuggle(userId, channelId, evt);
+                simpleAction(userId, channelId, 'snuggles', evt);
+                break;
+            case 'boop':
+                simpleAction(userId, channelId, 'boops', evt);
                 break;
             case 'iscute':
                 isCute(userId, channelId, evt);
                 break;
-            case 'setprefix':
+            case 'roll':
+                roll(userId, channelId, message);
+                break;
+            case 'prefix':
                 setPrefix(userId, channelId, message, evt);
                 break;
             case 'lsar':
@@ -104,55 +110,110 @@ function mainLogic2(userName, userId, channelId, message, evt) {
             case 'rsar':
                 removeSelfAssignableRolls(userId, channelId, message, evt);
                 break;
-            default:
-                unknownCommand(channelId, message, evt);
+            case 'iam':
+            case 'im':
+                assignSelfAssignableRolls(userId, channelId, message, evt);
+                break;
+            case 'iamnot':
+            case 'iamno':
+            case 'imnot':
+            case 'imno':
+                unassignSelfAssignableRolls(userId, channelId, message, evt);
+                break;
+            // default:
+            //     unknownCommand(channelId, message, evt);
         }
     }
 }
 //#endregion
 
 //#region Command help
-function help(channelId, evt) {
+function help(channelId, message, evt) {
+    let title, description, fields;
+    let args = parseCommand(message);
+    if (args.length > 1){
+        fields = [];
+        switch (args[1]) {
+            case 'help':
+                title = evt.prefix + 'help [command]';
+                description = 'Displays the list of commands or gets help with a specific command\n\n' +
+                    'Example Usage: `' + evt.prefix + 'help ping`';
+                break;
+            case 'ping':
+                title = evt.prefix + 'ping';
+                description = 'Pings the bot to see if it\'s alive\n\n' +
+                    'Example Usage: `' + evt.prefix + 'ping`';
+                break;
+            case 'snuggle':
+                title = evt.prefix + 'snuggle [user]';
+                description = 'Gets Phantasia to snuggle you or a user\n\n' +
+                    'Example Usage: `' + evt.prefix + 'snuggle @LinuxPony#3888`';
+                break;
+            case 'boop':
+                title = evt.prefix + 'boop [user]';
+                description = 'Gets Phantasia to boop you or a user\n\n' +
+                    'Example Usage: `' + evt.prefix + 'boop @LinuxPony#3888`';
+                break;
+            case 'iscute':
+                title = evt.prefix + 'iscute [user]';
+                description = 'Determines if a user is cute\n\n' +
+                    'Example Usage: `' + evt.prefix + 'iscute @LinuxPony#3888`';
+                break;
+            case 'prefix':
+                title = evt.prefix + 'prefix <symbol>';
+                description = '**(Admin Only)**\n' +
+                    'Sets the command prefix\n\n' +
+                    'Example Usage: `' + evt.prefix + 'prefix !`';
+                break;
+            case 'lsar':
+                title = evt.prefix + 'lsar';
+                description = 'Lists roles you can assign yourself\n\n' +
+                    'Example Usage: `' + evt.prefix + 'lsar`';
+                break;
+            case 'asar':
+                title = evt.prefix + 'asar <role> [description]';
+                description = '**(Admin Only)**\n' +
+                    'Adds a self assignable role.\n' +
+                    '*Note: Role name must be in quotes if it contains spaces*\n\n' +
+                    'Example Usage: `' + evt.prefix + 'asar "Event Notices" Be pinged every time there is a new event.`';
+                break;
+            case 'rsar':
+                title = evt.prefix + 'rsar <role>';
+                description = '**(Admin Only)**\n' +
+                    'removes a self assignable role\n\n' +
+                    'Example Usage: `' + evt.prefix + 'rsar Event Notices`';
+                break;
+            case 'iam':
+                title = evt.prefix + 'iam <role>';
+                description = 'Assigns you a self assignable role\n\n' +
+                    'Example Usage: `' + evt.prefix + 'iam Event Notices`';
+                break;
+            case 'iamnot':
+                title = evt.prefix + 'iamnot <role>';
+                description = 'Takes a self assignable role from you\n\n' +
+                    'Example Usage: `' + evt.prefix + 'iamnot Event Notices`';
+                break;
+            default:
+                title = 'Not Found';
+                description = 'Help documentation for this command wasn\'t found.\n' +
+                    'Please check the command and try again';
+        }
+    } else {
+        title = 'Help';
+        description = 'Listing all commands. Specify a command to see more information.';
+        fields = [{
+            name: 'Commands',
+            value: '`help`, `ping`, `snuggle`, `boop`, `iscute`, `roll`, `prefix`, `lsar`, `asar`, ' +
+                '`rsar`, `iam`, `iamnot`'
+        }]
+    }
     bot.sendMessage({
         to: channelId,
         embed: {
-            title: ":information_source: **List of Commands**",
-            // description: "These are the roles you may give to yourself with the `.iam` command.",
+            title: title,
+            description: description,
             color: 1,
-            fields: [
-                {
-                    name: evt.prefix + 'help',
-                    value: 'Displays this message'
-                },
-                {
-                    name: evt.prefix + 'ping',
-                    value: 'Pings the bot to see if it\'s alive'
-                },
-                {
-                    name: evt.prefix + 'snuggle [user]',
-                    value: 'Gets Phantasia to snuggle you or a user'
-                },
-                {
-                    name: evt.prefix + 'iscute [user]',
-                    value: 'Determines if a user is cute'
-                },
-                {
-                    name: evt.prefix + 'setprefix <symbol>',
-                    value: 'Sets the command prefix **(Admin Only)**'
-                },
-                {
-                    name: evt.prefix + 'lsar',
-                    value: 'Lists roles you can assign yourself'
-                },
-                {
-                    name: evt.prefix + 'asar',
-                    value: 'Adds a self assignable role **(Admin Only)**'
-                },
-                {
-                    name: evt.prefix + 'rsar',
-                    value: 'removes a self assignable role **(Admin Only)**'
-                }
-            ]
+            fields: fields
         }
     });
 }
@@ -167,15 +228,15 @@ function ping(userName, userId, channelId) {
 }
 //endregion
 
-//#region Command snuggle
-function snuggle(userId, channelId, evt) {
+//#region Command simpleAction (snuggle, boop)
+function simpleAction(userId, channelId, action, evt) {
     let message;
     if (evt.d.mentions.length === 0){
-        message = '*Snuggles with <@' + userId + '>*';
+        message = `*${action} <@${userId}>*`;
     } else if(evt.d.mentions[0].id === bot.id) {
-        message = 'I can\'t snuggle myself :frowning:';
+        message = `I can't do that to myself :frowning:`;
     } else {
-        message = '*Snuggles with <@' + evt.d.mentions[0].id + '>*';
+        message = `*${action} <@${evt.d.mentions[0].id}>*`;
     }
     bot.sendMessage({
         to: channelId,
@@ -201,6 +262,47 @@ function isCute(userId, channelId, evt) {
 }
 //endregion
 
+//#region Command roll
+function roll(userId, channelId, message) {
+    let sids, returnMessage;
+    let rolls = '';
+    let dice = 1;
+    let args = parseCommand(message);
+    if (args && args.length > 1){
+        sids = Number.parseInt(args[1]) || Number.parseInt(args[1].substr(1));
+        if (!isNaN(sids)){
+            if (args && args.length > 2){
+                let diceTryParse = Number.parseInt(args[2]);
+                if(!isNaN(diceTryParse)){
+                    dice = diceTryParse;
+                }
+            }
+            if (dice > 0){
+                for (let i = 0; i < dice; i++) {
+                    let thisRoll = Math.floor((Math.random() * sids) + 1);
+                    if (rolls){
+                        rolls += ', ' + thisRoll
+                    } else {
+                        rolls += thisRoll
+                    }
+                }
+                returnMessage = `<@${userId}> rolled ${dice} d${sids} and got ${rolls}`
+            } else {
+                returnMessage = 'You need to provide at least one die. Ex: d20 1 or just 20 1';
+            }
+        } else {
+            returnMessage = 'That die type isn\'t valid. Please try again. Ex: d20 or just 20';
+        }
+    } else {
+        returnMessage = 'You need to provide at least on die type. Ex: d20 or just 20';
+    }
+    bot.sendMessage({
+        to: channelId,
+        message: returnMessage
+    });
+}
+//endregion
+
 //#region Command setPrefix
 function setPrefix(userId, channelId, message, evt) {
     let response;
@@ -220,7 +322,7 @@ function setPrefix(userId, channelId, message, evt) {
                 response = ':x: The prefix must be exactly one character long';
             }
         } else {
-            response = ':x: A prefix to set is required. Example: `' + evt.prefix + 'setprefix !`';
+            response = ':x: A prefix to set is required. Example: `' + evt.prefix + 'prefix !`';
         }
     } else {
         response = ':x: You must be an Admin to run that command';
@@ -244,7 +346,7 @@ function listSelfAssignableRolls(channelId, evt) {
                     // noinspection JSUnfilteredForInLoop
                     fields[i] = {
                         name: bot.servers[evt.d.guild_id].roles[data[i].id].name,
-                        value: data[i].settings.description || "No Description Provided",
+                        value: data[i].settings.description || 'No Description Provided',
                     };
                 }
             }
@@ -257,8 +359,8 @@ function listSelfAssignableRolls(channelId, evt) {
         bot.sendMessage({
             to: channelId,
             embed: {
-                title: "Self-assignable Roles",
-                description: "These are the roles you may give to yourself with the `.iam` command.",
+                title: 'Self-assignable Roles',
+                description: 'These are the roles you may give to yourself with the `' + evt.prefix + 'iam` command.',
                 color: 1,
                 fields: fields
             }
@@ -278,7 +380,7 @@ function addSelfAssignableRolls(userId, channelId, message, evt) {
                 let settings;
                 if (args.length > 2) {
                     settings = {
-                        description: args.joinRange(" ", 2, args.length - 1)
+                        description: args.joinRange(' ', 2, args.length - 1)
                     }
                 } else {
                     settings = {
@@ -339,7 +441,94 @@ function removeSelfAssignableRolls(userId, channelId, message, evt) {
 }
 //endregion
 
+//#region Command Assigns Self-Assignable Role
+function assignSelfAssignableRolls(userId, channelId, message, evt) {
+    let returnMessage;
+    let args = parseCommand(message);
+    if (args.length > 1){
+        let roleId = roleIdFromName(args.joinRange(' ', 1, args.length - 1), evt.d.guild_id);
+        if (roleId){
+            db.getSAR(evt.d.guild_id, roleId, function (err, data) {
+                if (err) throw err;
+                if (data.length > 0){
+                    bot.addToRole({
+                        serverID: evt.d.guild_id,
+                        userID: userId,
+                        roleID: roleId
+                    }, function (err) {
+                        if (err) throw err;
+                        bot.sendMessage({
+                            to: channelId,
+                            message: ':white_check_mark: Role assigned!'
+                        });
+                    });
+                } else {
+                    bot.sendMessage({
+                        to: channelId,
+                        message: ':x: That role isn\'t self assignable'
+                    })
+                }
+            });
+        } else {
+            returnMessage = ':x: That role isn\'t valid';
+        }
+    } else {
+        returnMessage = ':x: A role name is required';
+    }
+    if (returnMessage){
+        bot.sendMessage({
+            to: channelId,
+            message: returnMessage
+        })
+    }
+}
+//endregion
+
+//#region Command Unassign Self-Assignable Role
+function unassignSelfAssignableRolls(userId, channelId, message, evt) {
+    let returnMessage;
+    let args = parseCommand(message);
+    if (args.length > 1){
+        let roleId = roleIdFromName(args.joinRange(' ', 1, args.length - 1), evt.d.guild_id);
+        if (roleId){
+            db.getSAR(evt.d.guild_id, roleId, function (err, data) {
+                if (err) throw err;
+                if (data.length > 0){
+                    bot.removeFromRole({
+                        serverID: evt.d.guild_id,
+                        userID: userId,
+                        roleID: roleId
+                    }, function (err) {
+                        if (err) throw err;
+                        bot.sendMessage({
+                            to: channelId,
+                            message: ':white_check_mark: Role removed!'
+                        });
+                    });
+                } else {
+                    bot.sendMessage({
+                        to: channelId,
+                        message: ':x: That role isn\'t self removable'
+                    })
+                }
+            });
+        } else {
+            returnMessage = ':x: That role isn\'t valid';
+        }
+    } else {
+        returnMessage = ':x: A role name is required';
+    }
+    if (returnMessage){
+        bot.sendMessage({
+            to: channelId,
+            message: returnMessage
+        })
+    }
+}
+//endregion
+
 //#region Command unknown
+// noinspection JSUnusedLocalSymbols
 function unknownCommand(channelId, message, evt) {
     bot.sendMessage({
         to: channelId,
