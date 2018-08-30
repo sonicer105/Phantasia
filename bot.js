@@ -456,11 +456,22 @@ function assignSelfAssignableRolls(userId, channelId, message, evt) {
                         userID: userId,
                         roleID: roleId
                     }, function (err) {
-                        if (err) throw err;
-                        bot.sendMessage({
-                            to: channelId,
-                            message: ':white_check_mark: Role assigned!'
-                        });
+                        if (err) {
+                            if (err.statusMessage === "FORBIDDEN"){
+                                bot.sendMessage({
+                                    to: channelId,
+                                    message: ':x: I\'m sorry, but I don\'t seam to have permission to do that right ' +
+                                    'now. This is probably a mistake and should be reported to an administrator'
+                                });
+                            } else {
+                                throw err;
+                            }
+                        } else {
+                            bot.sendMessage({
+                                to: channelId,
+                                message: ':white_check_mark: Role assigned!'
+                            });
+                        }
                     });
                 } else {
                     bot.sendMessage({
@@ -499,11 +510,22 @@ function unassignSelfAssignableRolls(userId, channelId, message, evt) {
                         userID: userId,
                         roleID: roleId
                     }, function (err) {
-                        if (err) throw err;
-                        bot.sendMessage({
-                            to: channelId,
-                            message: ':white_check_mark: Role removed!'
-                        });
+                        if (err) {
+                            if (err.statusMessage === "FORBIDDEN"){
+                                bot.sendMessage({
+                                    to: channelId,
+                                    message: ':x: I\'m sorry, but I don\'t seam to have permission to do that right ' +
+                                    'now. This is probably a mistake and should be reported to an administrator'
+                                });
+                            } else {
+                                throw err;
+                            }
+                        } else {
+                            bot.sendMessage({
+                                to: channelId,
+                                message: ':white_check_mark: Role removed!'
+                            });
+                        }
                     });
                 } else {
                     bot.sendMessage({
