@@ -1,17 +1,45 @@
 {
   "name": "phantasia",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.2.0",
+  "description": "A bot for Discord, using winstone, sqlite3, and discord.io",
+  "keyworks": [
+    "phantasia",
+    "hypnosis",
+    "role",
+    "rp",
+    "die",
+    "dice",
+    "discord",
+    "bot",
+    "winstone",
+    "sqlite3",
+    "discord.io"
+  ],
+  "homepage": "https://github.com/sonicer105/Phantasia#readme",
+  "bugs": {
+    "url": "https://github.com/sonicer105/Phantasia/issues"
+  },
+  "license": "ISC",
+  "author": {
+    "name": "LinuxPony",
+    "url": "https://github.com/sonicer105"
+  },
   "main": "bot.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sonicer105/Phantasia.git"
+  },
   "scripts": {
     "run.dev": "node bot.js",
     "run": "set NODE_ENV=production && node bot.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "discord.io": "github:izy521/discord.io",
     "sqlite3": "^4.0.2",
     "winston": "^3.0.0"
-  }
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "private": true
 }

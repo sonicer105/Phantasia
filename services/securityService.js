@@ -1,6 +1,6 @@
 let logger;
 
-const PERMS = Object.freeze({
+const perms = Object.freeze({
     CREATE_INSTANT_INVITE:  0x00000001, // Allows creation of instant invites (T, V)
     KICK_MEMBERS:           0x00000002, // Allows kicking members
     BAN_MEMBERS:            0x00000004, // Allows banning members
@@ -33,8 +33,8 @@ const PERMS = Object.freeze({
 });
 
 module.exports = {
-    init: function (initLogger) {
-        logger = initLogger;
+    init: function (bot) {
+        logger = bot.logger;
     },
     isAdmin: function (userId, guild) {
         if (guild.owner_id === userId) return true; // Always allow guild owner all access
@@ -42,7 +42,7 @@ module.exports = {
         for (let i in guild.members[userId].roles){
             // noinspection JSUnfilteredForInLoop, JSUnresolvedVariable, JSBitwiseOperatorUsage
             if (guild.roles[guild.members[userId].roles[i]] &&
-                PERMS.ADMINISTRATOR & guild.roles[guild.members[userId].roles[i]]._permissions){
+                perms.ADMINISTRATOR & guild.roles[guild.members[userId].roles[i]]._permissions){
                 return true;
             }
         }

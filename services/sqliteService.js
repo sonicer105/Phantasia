@@ -46,13 +46,13 @@ function assertTableExists(table, callback){
 module.exports = {
 
 //#region Init
-    init: function(initLogger) {
-        logger = initLogger;
+    init: function(bot) {
+        logger = bot.logger;
         db = new sqlite3.Database('./sqlite3.db', function(err) {
-            state = states.OPEN;
             if (err) {
                 logger.error(err.message);
             } else {
+                state = states.OPEN;
                 logger.info('SQLite DB Connected!');
             }
         });

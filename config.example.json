@@ -5,5 +5,23 @@
   },
   "auth": {
     "token": "<your secret token here>"
-  }
+  },
+  "services": [
+    {
+      "importAs": "db",
+      "fileName": "sqliteService"
+    },
+    {
+      "importAs": "security",
+      "fileName": "securityService"
+    }
+  ],
+  "modulesFileNames": [
+    "helpModule",
+    "pingModule",
+    "prefixModule",
+    "sarModule",
+    "diceModule",
+    "actionModule"
+  ]
 }
