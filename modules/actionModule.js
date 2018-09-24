@@ -11,7 +11,7 @@ function simpleAction(message, actionText) {
         returnMessage = actionText.mentionBot;
     } else {
         let username = message.evt.d.mentions[0].member.nick || message.evt.d.mentions[0].username;
-        returnMessage = helpers.stringFormat(actionText.noMention, username);
+        returnMessage = helpers.stringFormat(actionText.mentionUser, username);
     }
     bot.sendMessage({
         to: message.channelId,
@@ -23,6 +23,7 @@ module.exports = {
     commands: [
         "snuggle",
         "boop",
+        "bap",
         "iscute"
     ],
     man: {
@@ -36,6 +37,11 @@ module.exports = {
             description: 'Gets Phantasia to boop you or a user.\n\n' +
                 'Example Usage: `{0}boop @LinuxPony#3888`'
         },
+        bap: {
+            title: '{0}bap [user]',
+            description: 'Gets Phantasia to bap you or a user.\n\n' +
+            'Example Usage: `{0}bap @LinuxPony#3888`'
+        },
         iscute: {
             title: '{0}iscute [user]',
             description: 'Determines if a user is cute.\n\n' +
@@ -47,9 +53,9 @@ module.exports = {
     },
     snuggle: function (message) {
         simpleAction(message, {
-            noMention: '*Wraps arms around {0} and snuggles them.*',
+            noMention: '*Wraps my arms around {0} and snuggles them.*',
             mentionBot: 'I can\'t snuggle myself T-T',
-            mentionUser: '*Wraps arms around {0} and snuggles them.*'
+            mentionUser: '*Goes up to {0} and snuggles them.*'
         })
     },
     boop: function (message) {
@@ -57,6 +63,13 @@ module.exports = {
             noMention: '*boops {0}*',
             mentionBot: ':U I have been booped!',
             mentionUser: '*boops {0}*'
+        })
+    },
+    bap: function (message) {
+        simpleAction(message, {
+            noMention: '*baps {0}*',
+            mentionBot: 'T-T why would you want do that to me?',
+            mentionUser: '*baps {0}*'
         })
     },
     iscute: function (message) {
