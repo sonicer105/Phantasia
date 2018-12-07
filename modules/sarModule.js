@@ -52,11 +52,12 @@ module.exports = {
             let fields = [];
             if (data.length > 0){
                 for (let i in data){
-                    // noinspection JSUnfilteredForInLoop
-                    fields[i] = {
+                    if (!data.hasOwnProperty(i)) continue;
+                    if (!bot.servers[message.evt.d.guild_id].roles[data[i].id]) continue;
+                    fields.push({
                         name: bot.servers[message.evt.d.guild_id].roles[data[i].id].name,
                         value: data[i].settings.description || '<No Description Provided>',
-                    };
+                    });
                 }
             } if (fields.length === 0) {
                 fields = [{
