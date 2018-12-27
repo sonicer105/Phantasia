@@ -33,12 +33,14 @@ module.exports = {
         iam: {
             title: '{0}iam <role>',
             description: 'Assigns you a self assignable role.\n\n' +
-                'Example Usage: `{0}iam Event Notices`'
+                'Example Usage: `{0}iam Event Notices`\n\n' +
+                'See `{0}lsar` for a list of roles'
         },
         iamnot: {
             title: '{0}iamnot <role>',
             description: 'Takes a self assignable role from you.\n\n' +
-                'Example Usage: `{0}iamnot Event Notices`'
+                'Example Usage: `{0}iamnot Event Notices`\n\n' +
+                'See `{0}lsar` for a list of roles'
         }
     },
     init: function (initBot) {
@@ -183,15 +185,18 @@ module.exports = {
                     } else {
                         bot.sendMessage({
                             to: message.channelId,
-                            message: ':x: That role isn\'t self assignable'
+                            message: `:x: That role isn't self assignable. Use \`${message.evt.prefix}lsar\` for a ` +
+                                `list of available roles`
                         })
                     }
                 });
             } else {
-                returnMessage = ':x: That role isn\'t valid';
+                returnMessage = `:x: That role isn't valid. Use \`${message.evt.prefix}lsar\` for a list of ` +
+                    `available roles`;
             }
         } else {
-            returnMessage = ':x: A role name is required';
+            returnMessage = `:x: A role name is required. Use \`${message.evt.prefix}lsar\` for a list of ` +
+                `available roles`;
         }
         if (returnMessage){
             bot.sendMessage({
@@ -237,15 +242,18 @@ module.exports = {
                     } else {
                         bot.sendMessage({
                             to: message.channelId,
-                            message: ':x: That role isn\'t self removable'
+                            message: `:x: That role isn't self removable. Use \`${message.evt.prefix}lsar\` for a ` +
+                            `list of available roles`
                         })
                     }
                 });
             } else {
-                returnMessage = ':x: That role isn\'t valid';
+                returnMessage = `:x: That role isn't valid. Use \`${message.evt.prefix}lsar\` for a list of ` +
+                    `available roles`;
             }
         } else {
-            returnMessage = ':x: A role name is required';
+            returnMessage = `:x: A role name is required. Use \`${message.evt.prefix}lsar\` for a list of ` +
+                `available roles`;
         }
         if (returnMessage){
             bot.sendMessage({
