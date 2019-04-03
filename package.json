@@ -35,8 +35,8 @@
   },
   "dependencies": {
     "discord.io": "github:izy521/discord.io",
-    "sqlite3": "^4.0.2",
-    "winston": "^3.0.0"
+    "sqlite3": "^4.0.6",
+    "winston": "^3.2.1"
   },
   "engines": {
     "node": ">=8.0.0"

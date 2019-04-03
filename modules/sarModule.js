@@ -72,7 +72,7 @@ module.exports = {
                 embed: {
                     title: 'Self-assignable Roles',
                     description: `These are the roles you may give to yourself with the \`${message.evt.prefix}iam\` command.`,
-                    color: 1,
+                    color: 0x000000,
                     fields: fields
                 }
             });

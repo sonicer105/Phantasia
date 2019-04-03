@@ -7,6 +7,9 @@ module.exports = {
         }
         return null;
     },
+    getUserAvatarUrl: function(userId, bot, size = 64) {
+        return 'https://cdn.discordapp.com/avatars/' + userId + '/' + bot.users[userId].avatar + '.webp?size=' + size
+    },
     parseCommand: function(str) {
         let re = /(?:")([^"]+)(?:")|([^\s"]+)(?=\s+|$)/g;
         let res=[], arr;
@@ -19,7 +22,7 @@ module.exports = {
         return arrayToCut.slice(start, end).join(separator);
     },
     stringFormat: function(format) {
-        var args = Array.prototype.slice.call(arguments, 1);
+        let args = Array.prototype.slice.call(arguments, 1);
         return format.replace(/{(\d+)}/g, function(match, number) {
             return typeof args[number] !== 'undefined'? args[number] : match;
         });
@@ -40,6 +43,7 @@ module.exports = {
         this.message = message;
         this.args = module.exports.parseCommand(message);
         this.evt = evt;
+        // noinspection JSUnusedGlobalSymbols
         this.source = source
     }
 };

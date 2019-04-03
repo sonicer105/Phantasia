@@ -55,7 +55,7 @@ module.exports = {
             embed: {
                 title: title,
                 description: description,
-                color: 1,
+                color: 0x000000,
                 fields: fields
             }
         });
