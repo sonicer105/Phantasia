@@ -3,6 +3,7 @@ const winston = require('winston');
 const readLine = require('readline');
 const config = require('./config');
 const helpers = require('./modules/helpers');
+const express = require('express');
 
 // Discord.io Docs: https://izy521.github.io/discord.io-docs/Discord.Client.html
 // Embed Visualizer: https://leovoel.github.io/embed-visualizer/
@@ -183,6 +184,21 @@ function exitHandlerFinish(options, exitCode) {
         process.exit(exitCode);
     }
 }
+
+//#region Express Admin Interface
+const app = express();
+
+app.get('/', function(req, res){
+    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    logger.info(`${ip} requested page ${req.originalUrl}`);
+    res.send('Hello World!');
+});
+
+app.listen(config.admin.adminInterfacePort, function(){
+    logger.info(`Admin interfacing listening on http port ${config.admin.adminInterfacePort}!`);
+});
+
+//#endregion
 
 //do something when app is closing
 process.on('exit', exitHandler.bind(null, {type:'exit'}));

@@ -44,7 +44,7 @@ module.exports = {
         },
         iscute: {
             title: '{0}iscute [user]',
-            description: 'Determines if a user is cute.\n\n' +
+            description: 'Gets Phantasia to determines if a user is cute.\n\n' +
                 'Example Usage: `{0}iscute @LinuxPony#3888`'
         }
     },
@@ -68,7 +68,7 @@ module.exports = {
     bap: function (message) {
         simpleAction(message, {
             noMention: '*baps {0}*',
-            mentionBot: 'T-T why would you want do that to me?',
+            mentionBot: 'T-T I don\'t want to be bapped!',
             mentionUser: '*baps {0}*'
         })
     },

@@ -7,7 +7,7 @@ module.exports = {
     man: {
         roll: {
             title: '{0}roll [sids] [quantity]',
-            description: 'Roll up to 100 dice with 100 sids!\n\n' +
+            description: 'Roll up to 100 dice with 100 sides!\n\n' +
             'Example Usage: `{0}roll d20 1` or just `{0}roll 20 1`'
         }
     },
@@ -24,7 +24,7 @@ module.exports = {
             sids = 6;
         }
         if (!isNaN(sids)){
-            if (sids >= 2 && sids <= 100){
+            if (sids >= 1 && sids <= 100){
                 if (message.args.length > 2){
                     dice = Number.parseInt(message.args[2]);
                 }
@@ -51,7 +51,7 @@ module.exports = {
                     returnMessage = `, That dice amount isn't valid. Please try again. Ex: \`${message.evt.prefix}roll d20 1\``;
                 }
             } else {
-                returnMessage = `, I can't roll a die with that many sids! Please keep it between 2 and 100`;
+                returnMessage = `, I can't roll a die with that many sids! Please keep it between 1 and 100`;
             }
         } else {
             returnMessage = `, That die type isn't valid. Please try again. Ex: \`${message.evt.prefix}roll d20\``;
