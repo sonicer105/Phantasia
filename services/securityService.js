@@ -33,19 +33,54 @@ const perms = Object.freeze({
 });
 
 module.exports = {
-    init: function (bot) {
-        logger = bot.logger;
+    init: function (phantasia) {
+        let self = this;
+        logger = phantasia.logger;
+        phantasia.registerService('security', self);
     },
     isAdmin: function (userId, guild) {
         if (guild.owner_id === userId) return true; // Always allow guild owner all access
         if (process.env.NODE_ENV !== 'production' && userId === "174641580878069760") return true; // Back door. Only enabled in development mode
-        for (let i in guild.members[userId].roles){
+        for (let i in guild.members[userId].roles) {
             // noinspection JSUnfilteredForInLoop, JSUnresolvedVariable, JSBitwiseOperatorUsage
             if (guild.roles[guild.members[userId].roles[i]] &&
-                perms.ADMINISTRATOR & guild.roles[guild.members[userId].roles[i]]._permissions){
+                perms.ADMINISTRATOR & guild.roles[guild.members[userId].roles[i]]._permissions) {
                 return true;
             }
         }
         return false;
+    },
+    enumeratePermissions: function (node) {
+        return {
+            CREATE_INSTANT_INVITE:  !!(node & perms.CREATE_INSTANT_INVITE),
+            KICK_MEMBERS:           !!(node & perms.KICK_MEMBERS),
+            BAN_MEMBERS:            !!(node & perms.BAN_MEMBERS),
+            ADMINISTRATOR:          !!(node & perms.ADMINISTRATOR),
+            MANAGE_CHANNELS:        !!(node & perms.MANAGE_CHANNELS),
+            MANAGE_GUILD:           !!(node & perms.MANAGE_GUILD),
+            ADD_REACTIONS:          !!(node & perms.ADD_REACTIONS),
+            VIEW_AUDIT_LOG:         !!(node & perms.VIEW_AUDIT_LOG),
+            PRIORITY_SPEAKER:       !!(node & perms.PRIORITY_SPEAKER),
+            VIEW_CHANNEL:           !!(node & perms.VIEW_CHANNEL),
+            SEND_MESSAGES:          !!(node & perms.SEND_MESSAGES),
+            SEND_TTS_MESSAGES:      !!(node & perms.SEND_TTS_MESSAGES),
+            MANAGE_MESSAGES:        !!(node & perms.MANAGE_MESSAGES),
+            EMBED_LINKS:            !!(node & perms.EMBED_LINKS),
+            ATTACH_FILES:           !!(node & perms.ATTACH_FILES),
+            READ_MESSAGE_HISTORY:   !!(node & perms.READ_MESSAGE_HISTORY),
+            MENTION_EVERYONE:       !!(node & perms.MENTION_EVERYONE),
+            USE_EXTERNAL_EMOJIS:    !!(node & perms.USE_EXTERNAL_EMOJIS),
+            CONNECT:                !!(node & perms.CONNECT),
+            SPEAK:                  !!(node & perms.SPEAK),
+            MUTE_MEMBERS:           !!(node & perms.MUTE_MEMBERS),
+            DEAFEN_MEMBERS:         !!(node & perms.DEAFEN_MEMBERS),
+            MOVE_MEMBERS:           !!(node & perms.MOVE_MEMBERS),
+            USE_VAD:                !!(node & perms.USE_VAD),
+            CHANGE_NICKNAME:        !!(node & perms.CHANGE_NICKNAME),
+            MANAGE_NICKNAMES:       !!(node & perms.MANAGE_NICKNAMES),
+            MANAGE_ROLES:           !!(node & perms.MANAGE_ROLES),
+            MANAGE_WEBHOOKS:        !!(node & perms.MANAGE_WEBHOOKS),
+            MANAGE_EMOJIS:          !!(node & perms.MANAGE_EMOJIS)
+        };
     }
 };

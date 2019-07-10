@@ -1,63 +1,59 @@
 const helpers = require('./helpers');
 
-let bot;
+let phantasia;
 
-module.exports = {
-    commands: [
-        "help"
-    ],
-    man: {
-        help: {
-            title: '{0}help [command]',
-            description: 'Displays the list of commands or gets help with a specific command.\n\n' +
-                'Example Usage: `{0}help ping`'
-        },
-        default: {
-            title: 'Not Found',
-            description: 'Help documentation for that command wasn\'t found.\n' +
+function help(userID, channelID, message, event) {
+    let title, description, fields, args, prefix;
+    args = message.split(' ');
+    if (args.length > 1){
+        prefix = phantasia.config.prefixes[event.d.guild_id];
+        fields = [];
+        if(phantasia.helpDocs[args[1].toLowerCase()]){
+            let command = phantasia.helpDocs[args[1].toLowerCase()];
+            title = helpers.stringFormat(command.title, prefix);
+            description = helpers.stringFormat(command.description, prefix);
+        } else {
+            title = 'Not Found';
+            description = 'Help documentation for that command wasn\'t found.\n' +
                 'Please check the command and try again.'
         }
-    },
-    init: function (initBot) {
-        bot = initBot;
-    },
-    help: function (message) {
-        let title, description, fields;
-        if (message.args.length > 1){
-            fields = [];
-            if(bot.man[message.args[1].toLowerCase()]){
-                let manual = bot.man[message.args[1].toLowerCase()];
-                title = helpers.stringFormat(manual.title, message.evt.prefix);
-                description = helpers.stringFormat(manual.description, message.evt.prefix);
-            } else {
-                title = bot.man.default.title;
-                description = bot.man.default.description;
+    } else {
+        title = 'Help';
+        description = 'Listing all commands. Specify a command to see more information.';
+        let allCommandsRaw = Object.keys(phantasia.helpDocs);
+        let allCommands = '';
+        for (let i = 0; i < allCommandsRaw.length; i++){
+            if (allCommandsRaw[i] === 'default') continue;
+            if (allCommands){
+                allCommands += ", ";
             }
-        } else {
-            title = 'Help';
-            description = 'Listing all commands. Specify a command to see more information.';
-            let allCommandsRaw = Object.keys(bot.man);
-            let allCommands = '';
-            for (let i = 0; i < allCommandsRaw.length; i++){
-                if (allCommandsRaw[i] === 'default') continue;
-                if (allCommands){
-                    allCommands += ", ";
-                }
-                allCommands += '`' + allCommandsRaw[i] + '`';
-            }
-            fields = [{
-                name: 'Commands',
-                value: allCommands
-            }]
+            allCommands += '`' + allCommandsRaw[i] + '`';
         }
-        bot.sendMessage({
-            to: message.channelId,
-            embed: {
-                title: title,
-                description: description,
-                color: 0x000000,
-                fields: fields
-            }
-        });
+        fields = [{
+            name: 'Commands',
+            value: allCommands
+        }]
+    }
+    phantasia.sendMessage(userID, {
+        to: channelID,
+        embed: {
+            title: title,
+            description: description,
+            color: 0x000000,
+            fields: fields
+        }
+    });
+}
+
+module.exports = {
+    init: function (bot) {
+        phantasia = bot;
+        phantasia.registerMessageSentMiddleware(help, 'help');
+        phantasia.registerCommandHelp(
+            'help',
+            '{0}help [command]',
+            'Displays the list of commands or gets help with a specific command.\n\n' +
+            'Example Usage: `{0}help ping`'
+        );
     }
 };

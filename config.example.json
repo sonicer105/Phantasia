@@ -3,25 +3,17 @@
     "console": "debug",
     "file": "debug"
   },
-  "auth": {
-    "token": "<your secret token here>"
+  "bot": {
+    "clientId": "<your client ID here>",
+    "clientSecret": "<your client secret here>",
+    "authToken": "<your auth token here>",
+    "presence": "",
+    "defaultPrefix": "!"
   },
-  "services": [
-    {
-      "importAs": "db",
-      "fileName": "sqliteService"
-    },
-    {
-      "importAs": "security",
-      "fileName": "securityService"
-    }
-  ],
-  "modulesFileNames": [
-    "helpModule",
-    "pingModule",
-    "prefixModule",
-    "sarModule",
-    "diceModule",
-    "actionModule"
-  ]
+  "admin": {
+    "adminInterfacePort": 3000,
+    "trustProxy": 1,
+    "secure": false,
+    "oauthCallbackBasePath": "http://localhost:3000/"
+  }
 }

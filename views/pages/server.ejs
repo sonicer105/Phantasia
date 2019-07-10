@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head.ejs %>
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header.ejs %>
+</header>
+
+<main>
+    <%
+    let server = self.bot.servers[req.params.id];
+    let owner = self.bot.users[server.owner_id].username;
+    %>
+    <div class="jumbotron jumbotron-compact phantasia-jumbotron">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col logo-col">
+                    <img src="<%= 'https://cdn.discordapp.com/icons/' + req.params.id + '/' +
+                    server.icon + '.webp?size=64' %>" alt="Phantasia's Avatar">
+                </div>
+                <div class="col">
+                    <h2><%= server.name %></h2>
+                    <div>
+                        <span class="fas fa-user"></span> <%= owner %>
+                        <span class="fas fa-globe-americas"></span> <%= server.preferred_locale %>
+                        <span class="fas fa-map-marker-alt"></span> <%= server.region %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p>&lt;Content Placeholder&gt;</p>
+</main>
+
+<footer>
+    <% include ../partials/footer.ejs %>
+</footer>
+
+</body>
+</html>

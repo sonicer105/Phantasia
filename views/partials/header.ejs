@@ -1,0 +1,53 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Phantasia</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/commands">Commands</a>
+            </li>
+            <% if(res.locals.userInfo && res.locals.userInfo.guilds){ %>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownServer" role="button"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Servers
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownServer">
+                    <% for(let i = 0; i < res.locals.userInfo.guilds.length; i++){
+                    let adminManager = (self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).ADMINISTRATOR ||
+                    self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).MANAGE_GUILD);
+                    let onServer = !!self.bot.servers[res.locals.userInfo.guilds[i].id];
+                    let url = (onServer) ? '/server/' + res.locals.userInfo.guilds[i].id : self.generateDiscordBotInvite();
+                    if(adminManager){ %>
+                    <a class="dropdown-item" href="<%= url %>"><%= res.locals.userInfo.guilds[i].name %></a>
+                    <% }} %>
+                </div>
+            </li>
+            <% } %>
+        </ul>
+        <ul class="navbar-nav">
+            <% if(res.locals.userInfo){ %>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle has-user-avatar" href="#" id="navbarDropdownAccount" role="button"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <img class="round user-avatar" alt="<%= res.locals.userInfo.username %>'s Avatar"
+                         src="https://cdn.discordapp.com/avatars/<%= res.locals.userInfo.id %>/<%= res.locals.userInfo.avatar %>.webp?size=32">
+                    <%= res.locals.userInfo.username %>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownAccount">
+                    <a class="dropdown-item" href="/logout">Logout</a>
+                </div>
+            </li>
+            <% } else { %>
+            <li class="nav-item">
+                <a class="nav-link" href="/login">Login</a>
+            </li>
+            <% } %>
+        </ul>
+    </div>
+</nav>

@@ -46,16 +46,19 @@ function assertTableExists(table, callback){
 module.exports = {
 
 //#region Init
-    init: function(bot) {
-        logger = bot.logger;
+    init: function(phantasia) {
+        let self = this;
+        logger = phantasia.logger;
         db = new sqlite3.Database('./sqlite3.db', function(err) {
             if (err) {
                 logger.error(err.message);
             } else {
                 state = states.OPEN;
                 logger.info('SQLite DB Connected!');
+                db.run( 'PRAGMA journal_mode = WAL;' );
             }
         });
+        phantasia.registerService('db', self);
     },
 //#endregion
 
@@ -173,7 +176,22 @@ module.exports = {
     states: states,
     getState: function () {
         return state;
-    }
+    },
 //#endregion
 
+    destructor: function (completionCallback) {
+        let self = this;
+        if (self.getState() === states.OPEN) {
+            self.close(function (err) {
+                if (err) {
+                    logger.error(err);
+                } else {
+                    logger.info('SQLite DB closed gracefully!');
+                    completionCallback();
+                }
+            });
+        } else {
+            completionCallback();
+        }
+    }
 };

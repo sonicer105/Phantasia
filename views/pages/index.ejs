@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head.ejs %>
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header.ejs %>
+</header>
+
+<main>
+    <div class="jumbotron phantasia-jumbotron">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col logo-col">
+                    <img src="<%= 'https://cdn.discordapp.com/avatars/' + self.bot.id + '/' +
+                    self.bot.users[self.bot.id].avatar + '.webp?size=128' %>" alt="Phantasia's Avatar">
+                </div>
+                <div class="col">
+                    <h1>Phantasia</h1>
+                    <p>A powerful, node based bot for Discord.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <% if(res.locals.userInfo && res.locals.userInfo.guilds){ %>
+    <h2 class="text-center">Please select a server to manage</h2>
+    <div class="servers row">
+    <% for(let i = 0; i < res.locals.userInfo.guilds.length; i++){%>
+        <%
+        let adminManager = (self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).ADMINISTRATOR ||
+        self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).MANAGE_GUILD);
+        let onServer = !!self.bot.servers[res.locals.userInfo.guilds[i].id];
+        let url = (onServer) ? '/server/' + res.locals.userInfo.guilds[i].id : self.generateDiscordBotInvite();
+        if(adminManager){ %>
+        <a href="<%= url %>" class="server col">
+            <% if(res.locals.userInfo.guilds[i].icon){ %>
+            <img alt="<%= res.locals.userInfo.guilds[i].name %>'s Server Icon"
+                 src="https://cdn.discordapp.com/icons/<%= res.locals.userInfo.guilds[i].id %>/<%= res.locals.userInfo.guilds[i].icon %>.webp?size=128" aria-hidden="true">
+            <% } else { %>
+            <span class="no-image fas fa-comments" aria-hidden="true"></span>
+            <% } %>
+            <span class="server-text"><%= res.locals.userInfo.guilds[i].name %></span>
+            <% if (!onServer) { %>
+            <span class="server-text">[Invite]</span>
+            <% } %>
+        </a>
+        <% } %>
+    <% } %>
+    </div>
+    <% } %>
+</main>
+
+<footer>
+    <% include ../partials/footer.ejs %>
+</footer>
+
+</body>
+</html>

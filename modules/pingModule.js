@@ -1,24 +1,21 @@
-let bot;
+let phantasia;
+
+function ping(userID, channelID) {
+    phantasia.sendMessage(userID, {
+        to: channelID,
+        message: 'Pong!'
+    });
+}
 
 module.exports = {
-    commands: [
-        "ping"
-    ],
-    man: {
-        ping: {
-            title: '{0}ping',
-            description: 'Pings the bot to see if it\'s alive.\n\n' +
-                'Example Usage: `{0}ping`'
-        }
-    },
-    init: function (initBot) {
-        bot = initBot;
-    },
-    ping: function (message) {
-        bot.sendMessage({
-            to: message.channelId,
-            message: 'Pong!'
-        });
+    init: function (bot) {
+        phantasia = bot;
+        phantasia.registerMessageSentMiddleware(ping, 'ping');
+        phantasia.registerCommandHelp(
+            'ping',
+            '{0}ping',
+            'Pings the bot to see if it\'s alive.\n\n' +
+            'Example Usage: `{0}ping`'
+        );
     }
 };
-

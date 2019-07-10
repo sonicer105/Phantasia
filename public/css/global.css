@@ -1,0 +1,88 @@
+/*#region nav*/
+.nav-link.dropdown-toggle.has-user-avatar {
+    padding: 0;
+}
+
+img.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+/*#endregion nav*/
+
+/*#region phantasia jumbotron*/
+.phantasia-jumbotron img {
+    border-radius: 50%;
+    background: #fff;
+}
+
+@media (max-width: 450px){
+    .phantasia-jumbotron img {
+        display: none;
+    }
+}
+
+.phantasia-jumbotron .logo-col {
+    flex-grow: 0;
+}
+
+/*#endregion phantasia jumbotron*/
+
+/*#region server list*/
+.row.servers {
+    justify-content: space-around;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    margin-bottom: 1em;
+}
+
+a.server {
+    text-align: center;
+    flex-grow: 0;
+    padding-top: 1em;
+    padding-bottom: 1em;
+}
+
+a.server img, a.server .no-image {
+    position: relative;
+    border-radius: 50%;
+    width: 128px;
+    height: 128px;
+    display: block;
+    margin: auto;
+}
+
+a.server .no-image {
+    background: #e9ecef;
+}
+
+a.server .no-image:before {
+    position: absolute;
+    font-size: 64px;
+    top: 32px;
+    left: 0;
+    width: 128px;
+}
+
+a.server .server-text {
+    display: block;
+    width: 128px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+/*#endregion server list*/
+
+/*#region server page*/
+.jumbotron.jumbotron-compact{
+    padding: 1em;
+}
+
+/*#endregion server page*/
+
+/*#region general*/
+
+/*#endregion general*/

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head.ejs %>
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header.ejs %>
+</header>
+
+<%
+let statusMessage = '';
+switch (res.statusCode) {
+    case 400:
+        statusMessage = 'Bad Request';
+        break;
+    case 403:
+        statusMessage = 'Forbidden';
+        break;
+    case 404:
+        statusMessage = 'Not Found';
+        break;
+    case 500:
+        statusMessage = 'Internal Server Error';
+        break;
+    default:
+        statusMessage = 'Generic Error';
+        break;
+}
+%>
+
+<main>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title text-danger"><%= res.statusCode %> - <%= statusMessage %></h5>
+            <%if(res.statusCode == 400 && req.originalUrl.includes('server')){ %>
+            <p class="card-text">
+                Failed to load server with id <%= encodeURIComponent(req.params.id) %>. This could be because:
+            </p>
+            <ul class="card-text">
+                <li>A server with that id doesn't exist.</li>
+                <li>Phantasia isn't on that server.</li>
+                <li>You do not have permission to manage that server.</li>
+            </ul>
+            <p class="card-text">
+                Please revise your request and try again.
+            </p>
+            <%} else if(res.statusCode == 403){ %>
+                <p class="card-text">
+                    You don't have the appropriate permission to access this area. Please revise your request and try
+                    again.
+                </p>
+            <%} else if(res.statusCode == 404){ %>
+            <p class="card-text">
+                The page you requested could not be found. Please revise your request and try again.
+            </p>
+            <%} else if(res.statusCode == 500){ %>
+                <p class="card-text">
+                    There was an error processing <%= req.method %> <%= encodeURI(req.originalUrl) %>.
+                </p>
+                <pre class="card-text"><%= (error)? error : 'null'; %></pre>
+            <%}%>
+            <a href="/" class="btn btn-danger">Go Back</a>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <% include ../partials/footer.ejs %>
+</footer>
+
+</body>
+</html>
