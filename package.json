@@ -32,12 +32,16 @@
     "run": "set NODE_ENV=production && node bot.js"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.9.0",
+    "bootstrap": "^4.3.1",
     "connect-sqlite3": "^0.9.11",
     "discord.io": "github:izy521/discord.io",
     "ejs": "^2.6.2",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
+    "jquery": "^3.4.1",
     "path": "^0.12.7",
+    "popper.js": "^1.15.0",
     "request": "^2.88.0",
     "sqlite3": "^4.0.9",
     "winston": "^3.2.1"

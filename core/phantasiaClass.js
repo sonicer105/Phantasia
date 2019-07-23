@@ -120,6 +120,11 @@ module.exports = class Phantasia {
 
         // serve static content from /public on root
         self.web.use(express.static('public'));
+        self.web.use('/css', express.static('node_modules/@fortawesome/fontawesome-free/css'));
+        self.web.use('/webfonts', express.static('node_modules/@fortawesome/fontawesome-free/webfonts'));
+        self.web.use(express.static('node_modules/bootstrap/dist'));
+        self.web.use('/js', express.static('node_modules/jquery/dist'));
+        self.web.use('/js', express.static('node_modules/popper.js/dist/umd'));
 
         // assign user info to res, if it exists in the session.
         self.web.use(function (req, res, next) {
@@ -135,7 +140,7 @@ module.exports = class Phantasia {
 
         // handle index load
         self.web.get('/login', function (req, res) {
-            res.writeHead(301, {
+            res.writeHead(302, {
                 Location: self.generateDiscordOauthURL()
             });
             res.end();
@@ -144,7 +149,7 @@ module.exports = class Phantasia {
         // handle index load
         self.web.get('/logout', function (req, res) {
             req.session.destroy();
-            res.writeHead(301, {
+            res.writeHead(302, {
                 Location: self.config.admin.oauthCallbackBasePath
             });
             res.end();
@@ -196,7 +201,7 @@ module.exports = class Phantasia {
                                         req.session.userInfo.guilds = body;
                                         req.session.save();
                                     }
-                                    res.writeHead(301, {
+                                    res.writeHead(302, {
                                         Location: self.config.admin.oauthCallbackBasePath
                                     });
                                     res.end();
@@ -206,7 +211,7 @@ module.exports = class Phantasia {
                     }
                 });
             } else {
-                res.writeHead(301, {
+                res.writeHead(302, {
                     Location: self.config.admin.oauthCallbackBasePath
                 });
                 res.end();
