@@ -22,7 +22,7 @@
                     let adminManager = (self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).ADMINISTRATOR ||
                     self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).MANAGE_GUILD);
                     let onServer = !!self.bot.servers[res.locals.userInfo.guilds[i].id];
-                    let url = (onServer) ? '/server/' + res.locals.userInfo.guilds[i].id : self.generateDiscordBotInvite();
+                    let url = (onServer) ? '/server/' + res.locals.userInfo.guilds[i].id : self.web.generateDiscordBotInvite();
                     if(adminManager){ %>
                     <a class="dropdown-item" href="<%= url %>"><%= res.locals.userInfo.guilds[i].name %></a>
                     <% }} %>
@@ -40,12 +40,12 @@
                     <%= res.locals.userInfo.username %>
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownAccount">
-                    <a class="dropdown-item" href="/logout">Logout</a>
+                    <a class="dropdown-item" href="/logout?r=<%= Math.floor(Math.random() * 1000000) %>">Logout</a>
                 </div>
             </li>
             <% } else { %>
             <li class="nav-item">
-                <a class="nav-link" href="/login">Login</a>
+                <a class="nav-link" href="/login?r=<%= Math.floor(Math.random() * 1000000) %>">Login</a>
             </li>
             <% } %>
         </ul>

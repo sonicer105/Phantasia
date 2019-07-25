@@ -33,7 +33,7 @@
         let adminManager = (self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).ADMINISTRATOR ||
         self.services.security.enumeratePermissions(res.locals.userInfo.guilds[i].permissions).MANAGE_GUILD);
         let onServer = !!self.bot.servers[res.locals.userInfo.guilds[i].id];
-        let url = (onServer) ? '/server/' + res.locals.userInfo.guilds[i].id : self.generateDiscordBotInvite();
+        let url = (onServer) ? '/server/' + res.locals.userInfo.guilds[i].id : self.web.generateDiscordBotInvite();
         if(adminManager){ %>
         <a href="<%= url %>" class="server col">
             <% if(res.locals.userInfo.guilds[i].icon){ %>

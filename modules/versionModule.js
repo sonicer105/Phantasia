@@ -1,4 +1,4 @@
-const helpers = require('./helpers');
+const helpers = require('../core/helpers');
 const fs = require("fs");
 
 let phantasia;

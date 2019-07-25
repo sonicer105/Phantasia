@@ -34,7 +34,7 @@ switch (res.statusCode) {
     <div class="card">
         <div class="card-body">
             <h5 class="card-title text-danger"><%= res.statusCode %> - <%= statusMessage %></h5>
-            <%if(res.statusCode == 400 && req.originalUrl.includes('server')){ %>
+            <% if(res.statusCode == 400 && req.originalUrl.includes('server')){ %>
             <p class="card-text">
                 Failed to load server with id <%= encodeURIComponent(req.params.id) %>. This could be because:
             </p>
@@ -46,6 +46,16 @@ switch (res.statusCode) {
             <p class="card-text">
                 Please revise your request and try again.
             </p>
+            <%} else if(res.statusCode == 400){ %>
+                <p class="card-text">
+                    There was an error processing <%= req.method %> <%= encodeURI(req.originalUrl) %>.
+                </p>
+                <p class="card-text">
+                    Your request was malformed or invalid. This usually means necessary information was missing.
+                </p>
+                <p class="card-text">
+                    Please revise your request and try again.
+                </p>
             <%} else if(res.statusCode == 403){ %>
                 <p class="card-text">
                     You don't have the appropriate permission to access this area. Please revise your request and try

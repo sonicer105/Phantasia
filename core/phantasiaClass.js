@@ -1,13 +1,10 @@
 const winston = require('winston');
 const Discord = require('discord.io');
-const express = require('express');
-const session = require('express-session');
-const SQLiteStore = require('connect-sqlite3')(session);
 const path = require('path');
 const fs = require('fs');
-const request = require('request');
 
-const helpers = require('../modules/helpers');
+const helpers = require('./helpers');
+const webCore = require('./webCore');
 
 // Are core class for encapsulation
 module.exports = class Phantasia {
@@ -88,151 +85,8 @@ module.exports = class Phantasia {
 
     _initExpressApp() {
         let self = this;
-        self.web = express();
-
-        // Set up sessions
-        self.web.set('trust proxy', self.config.admin.trustProxy);
-        self.web.use(session({
-            store: new SQLiteStore({
-                table: 'express_sessions',
-                db: 'sqlite3.db',
-                dir: '.',
-                concurrentDB: 'true'
-            }),
-            secret: self.config.bot.clientSecret,
-            resave: false,
-            saveUninitialized: true,
-            cookie: {
-                secure: self.config.admin.secure,
-                maxAge: 24 * 60 * 60 * 1000
-            }
-        }));
-
-        // log request
-        self.web.use(function (req, res, next) {
-            let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            self.logger.debug(`${ip} requested page ${req.originalUrl}`);
-            next();
-        });
-
-        // set EJS as the page renderer
-        self.web.set('view engine', 'ejs');
-
-        // serve static content from /public on root
-        self.web.use(express.static('public'));
-        self.web.use('/css', express.static('node_modules/@fortawesome/fontawesome-free/css'));
-        self.web.use('/webfonts', express.static('node_modules/@fortawesome/fontawesome-free/webfonts'));
-        self.web.use(express.static('node_modules/bootstrap/dist'));
-        self.web.use('/js', express.static('node_modules/jquery/dist'));
-        self.web.use('/js', express.static('node_modules/popper.js/dist/umd'));
-
-        // assign user info to res, if it exists in the session.
-        self.web.use(function (req, res, next) {
-            res.locals.userInfo = req.session.userInfo || null;
-            next();
-        });
-
-        // handle index load
-        self.web.get('/', function (req, res) {
-            res.render('pages/index', {req: req, res: res, self: self});
-            res.end();
-        });
-
-        // handle index load
-        self.web.get('/login', function (req, res) {
-            res.writeHead(302, {
-                Location: self.generateDiscordOauthURL()
-            });
-            res.end();
-        });
-
-        // handle index load
-        self.web.get('/logout', function (req, res) {
-            req.session.destroy();
-            res.writeHead(302, {
-                Location: self.config.admin.oauthCallbackBasePath
-            });
-            res.end();
-        });
-
-        // handle index load
-        self.web.get('/server/:id', function (req, res) {
-            if(req.params.id && self.bot.servers[req.params.id] &&
-                res.locals.userInfo && res.locals.userInfo.guilds && (
-                self.services.security.enumeratePermissions(res.locals.userInfo.guilds.find(function(e){return e.id === req.params.id}).permissions).ADMINISTRATOR ||
-                self.services.security.enumeratePermissions(res.locals.userInfo.guilds.find(function(e){return e.id === req.params.id}).permissions).MANAGE_GUILD)) {
-                res.render('pages/server', {req: req, res: res, self: self});
-            } else {
-                res.status(400);
-                res.render('pages/error', {req: req, res: res, self: self});
-            }
-            res.end();
-        });
-
-        self.web.get('/login/oauth2', function (req, res) {
-            if(req.query.code && !req.query.guild_id && !req.query.permissions){
-                self.getUserToken(req.query.code, function (err, httpResponse, body) {
-                    if (err) throw err;
-                    body = JSON.parse(body);
-                    if(httpResponse.statusCode < 300){
-                        req.session.token = body;
-                        req.session.save();
-                        self.getUserInfo(req.session.token.access_token, function (err, httpResponse, body) {
-                            if (err) throw err;
-                            body = JSON.parse(body);
-                            if(httpResponse.statusCode < 300) {
-                                req.session.userInfo = body;
-                                req.session.userInfo.flags = {
-                                    employee: (body.flags & (1<<0)) > 0,
-                                    partner: (body.flags & (1<<1)) > 0,
-                                    hyperSquadEvent: (body.flags & (1<<2)) > 0,
-                                    bugHunter: (body.flags & (1<<3)) > 0,
-                                    houseBravery: (body.flags & (1<<6)) > 0,
-                                    houseBrilliance: (body.flags & (1<<7)) > 0,
-                                    houseBalance: (body.flags & (1<<8)) > 0,
-                                    earlySupporter: (body.flags & (1<<9)) > 0,
-                                    teamUser: (body.flags & (1<<10)) > 0
-                                };
-                                req.session.save();
-                                self.getUserGuilds(req.session.token.access_token, function (err, httpResponse, body) {
-                                    if (err) throw err;
-                                    body = JSON.parse(body);
-                                    if(httpResponse.statusCode < 300) {
-                                        req.session.userInfo.guilds = body;
-                                        req.session.save();
-                                    }
-                                    res.writeHead(302, {
-                                        Location: self.config.admin.oauthCallbackBasePath
-                                    });
-                                    res.end();
-                                });
-                            }
-                        });
-                    }
-                });
-            } else {
-                res.writeHead(302, {
-                    Location: self.config.admin.oauthCallbackBasePath
-                });
-                res.end();
-            }
-        });
-
-        // Handle 404
-        self.web.use(function (req, res) {
-            res.status(404);
-            res.render('pages/error', {req: req, res: res, self: self});
-        });
-
-        // Handle 500
-        self.web.use(function (error, req, res, next) {
-            res.status(500);
-            res.render('pages/error', {req: req, res: res, self: self, error: error});
-        });
-
-        self.web.listen(self.config.admin.adminInterfacePort, function () {
-            self.logger.info(`Admin interfacing listening on http port ${self.config.admin.adminInterfacePort}!`);
-        });
+        self.web = webCore;
+        self.web.init(self);
     }
 
     _initComponent(component, completionCallback) {
@@ -342,78 +196,6 @@ module.exports = class Phantasia {
     }
 
     //#endregion Bot Actions
-
-    //#region oauth2 handlers
-
-    generateDiscordOauthURL() {
-        let self = this;
-        let clientId = self.config.bot.clientId;
-        let redirectUri = encodeURIComponent(
-            self.config.admin.oauthCallbackBasePath + 'login/oauth2'
-        );
-        return `https://discordapp.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&` +
-            `response_type=code&scope=identify%20guilds`;
-    }
-
-    generateDiscordBotInvite() {
-        let self = this;
-        let clientId = self.config.bot.clientId;
-        let redirectUri = encodeURIComponent(
-            self.config.admin.oauthCallbackBasePath + 'login/oauth2'
-        );
-        return `https://discordapp.com/oauth2/authorize?client_id=${clientId}&permissions=0&` +
-            `redirect_uri=${redirectUri}&response_type=code&scope=bot`;
-    }
-
-    getUserToken(code, callback) {
-        let self = this;
-
-        request.post({
-            url: 'https://discordapp.com/api/v6/oauth2/token',
-            headers: {
-                'User-Agent': 'Phantasia',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            form: {
-                'client_id': self.config.bot.clientId,
-                'client_secret': self.config.bot.clientSecret,
-                'grant_type': 'authorization_code',
-                'redirect_uri': self.config.admin.oauthCallbackBasePath + 'login/oauth2',
-                'scope': 'identify guilds',
-                'code': code
-            }
-        }, callback);
-    }
-
-    getUserInfo(token, callback) {
-        let self = this;
-
-        request.get({
-            url: 'https://discordapp.com/api/users/@me',
-            headers: {
-                'User-Agent': 'Phantasia'
-            },
-            auth: {
-                'bearer': token
-            }
-        }, callback);
-    }
-
-    getUserGuilds(token, callback) {
-        let self = this;
-
-        request.get({
-            url: 'https://discordapp.com/api/users/@me/guilds',
-            headers: {
-                'User-Agent': 'Phantasia'
-            },
-            auth: {
-                'bearer': token
-            }
-        }, callback);
-    }
-
-    //$endregion oauth2 handlers
 
 // bot.services = {};
 // bot.commands = {};

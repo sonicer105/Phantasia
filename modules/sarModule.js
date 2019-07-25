@@ -1,4 +1,4 @@
-const helpers = require('./helpers');
+const helpers = require('../core/helpers');
 
 let phantasia;
 
@@ -172,7 +172,7 @@ function iam(userID, channelID, message, event) {
                         }
                     });
                 } else {
-                    phantasia.sendMessage({
+                    phantasia.sendMessage(userID, {
                         to: channelID,
                         message: `:x: That role isn't self assignable. Use \`${prefix}lsar\` for a ` +
                             `list of available roles`
@@ -188,7 +188,7 @@ function iam(userID, channelID, message, event) {
             `available roles`;
     }
     if (returnMessage){
-        phantasia.sendMessage({
+        phantasia.sendMessage(userID, {
             to: channelID,
             message: returnMessage
         })

@@ -1,6 +1,6 @@
 {
   "name": "phantasia",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A bot for Discord, using winstone, sqlite3, and discord.io",
   "keyworks": [
     "phantasia",
