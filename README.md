@@ -1,3 +1,5 @@
+# This bot relied on the discord.io JavaScript Library. This library has been discontinued and no longer works as the API end point it uses were removed. This project is archived as it's old, needs a lot of work, and the purpose it was made for is no longer required
+
 # Phantasia
 A Discord Bot
 
